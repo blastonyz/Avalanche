@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {TimelockController} from "@openzeppelin/contracts/governance/TimelockController.sol";
 import {SimpleGovernor} from "./SimpleGovernor.sol";
@@ -36,7 +35,7 @@ contract GovernorFactory is Ownable {
         registry = DAORegistry(_registry);
 
         sharedTimelock = new TimelockController(
-            180, // 3 minutes delay
+            60, 
             proposers,
             executors,
             admin
@@ -49,21 +48,32 @@ contract GovernorFactory is Ownable {
         address token,
         uint256 quorumPercent
     ) external returns (address governor, address treasury) {
-        // Clone and initialize Governor
-        governor = Clones.clone(governorImpl);
-        SimpleGovernor(payable(governor)).initialize(
+        
+        SimpleGovernor gov = new SimpleGovernor(
+            name,
             IVotes(token),
             sharedTimelock,
-            quorumPercent
+            1,       
+            10 minutes,
+            1,     
+            quorumPercent,
+            msg.sender
         );
 
-        // Clone and initialize Treasury
-        treasury = Clones.clone(treasuryImpl);
-        Treasury(payable(treasury)).initialize(governor);
+        // 🚀 Crear Treasury
+        Treasury tre = new Treasury();
+        tre.initialize(address(gov));
 
-        // Register DAO metadata
-        registry.registerDAO(name, description, governor, treasury, token);
+        // Registrar en DAORegistry
+        registry.registerDAO(
+            name,
+            description,
+            address(gov),
+            address(tre),
+            token
+        );
 
-        emit DAOCreated(governor, treasury, token, name, description);
+        emit DAOCreated(address(gov), address(tre), token, name, description);
+        return (address(gov), address(tre));
     }
 }

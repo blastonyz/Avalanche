@@ -24,9 +24,7 @@ contract DeploySimpleToken is Script {
         Treasury treasury = new Treasury();
         console.log("Treasury deployed at:", address(treasury));
 
-        DAORegistry daoregistry = new DAORegistry();
-        console.log("DaoReg deployed at:", address(daoregistry));
-
+     
         vm.stopBroadcast();
     }
 }
