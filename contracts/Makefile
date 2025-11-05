@@ -14,7 +14,7 @@ TIMELOCK := 0x9258c4c1621d6eCB85971b81B56Fd1206E405A68
 REGISTRY := 0x7ea7fC66A5a1eEe4B6b983A84718372ce043fD19
 GOVFAC := 0xfFd14cEf06fe527Df57829Ca7EB93158727afb48
 PID := 0xdbe173360db52fe847bafb29e3e774f5f0a71acd64006cd600ee8c021a573e0b
-
+GOVNEWFR := 0x4dF4178A9cb71cff072848Aa2CD007c02CF072bF
 #erc20 propiedad de governor?
 
 # hash Executor: 0xd8aa0f3194971a2a116679f7c2090f6939c8d4e01a2a8d7e41d55e5351469e63
@@ -184,3 +184,15 @@ execute2:
 		"[0x40c10f190000000000000000000000000571235134dc15a00f02916987c2c16b5fc52e2a00000000000000000000000000000000000000000000000000000000000003e8]" \
 		$(shell cast keccak "Propuesta: mintear 1000 tokens a ADMIN") \
 		--rpc-url $(RPC_URL2) --private-key $(PK)
+
+govnew:
+	cast call $(GOVNEWFR) "votingDelay()(uint256)" --rpc-url $(AVA_RPC_URL)
+governornewVotP:
+	cast call $(GOVNEWFR) "votingPeriod()(uint256)" --rpc-url $(AVA_RPC_URL)
+govnewTOk:	
+	cast call $(GOVNEWFR) "token()(address)" --rpc-url $(AVA_RPC_URL)
+
+seeVOtes:
+	cast call $(TOKEN) "getVotes(address)(uint256)" $(ADMIN) --rpc-url $(AVA_RPC_URL)	
+seeGOVVotes:
+	cast call $(TOKEN) "getVotes(address)(uint256)" $(GOVNEWFR) --rpc-url $(AVA_RPC_URL)	
