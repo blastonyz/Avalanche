@@ -1,4 +1,6 @@
-import ConnectWallet from "../connection/ConnectWallet";
+'use client'
+import dynamic from 'next/dynamic';
+const ConnectWallet = dynamic(() => import('../connection/ConnectWallet'), { ssr: false });
 
 const Navbar = () => {
  

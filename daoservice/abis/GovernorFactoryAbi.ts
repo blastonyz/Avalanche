@@ -76,6 +76,19 @@ export const GovernorFactoryAbi = [
   },
   {
     "type": "function",
+    "name": "getTimelocker",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "governorImpl",
     "inputs": [],
     "outputs": [
@@ -129,6 +142,19 @@ export const GovernorFactoryAbi = [
         "name": "",
         "type": "address",
         "internalType": "contract TimelockController"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "timelockImpl",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "stateMutability": "view"

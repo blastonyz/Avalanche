@@ -8,8 +8,7 @@ export default function DeployDao({ factoryAddress }: { factoryAddress: `0x${str
     async function handleSubmit(formData: OrgFormData) {
         try {
             await mutateAsync({
-                ...formData,
-                treasury: formData.treasury as `0x${string}`,
+                ...formData
             });
 
         } catch (err) {
@@ -22,7 +21,7 @@ export default function DeployDao({ factoryAddress }: { factoryAddress: `0x${str
             <h2>Deploy a new DAO</h2>
             <OrganizationForm onSubmit={handleSubmit} />
             {isPending && <p>Deploying DAO...</p>}
-            {isSuccess && <p>DAO deployed! Tx hash: {data}</p>}
+           
             {error && <p>Error: {error.message}</p>}
         </div>
     );

@@ -120,6 +120,20 @@ contract SimpleGovernor is
         return super.proposalNeedsQueuing(proposalId);
     }
 
+    function castVote(uint256 proposalId, uint8 support) public override returns (uint256) {
+        address voter = _msgSender();
+        return _castVote(proposalId, voter, support, "");
+    }
+
+    function castVoteWithReason(
+        uint256 proposalId,
+        uint8 support,
+        string calldata reason
+    ) public override returns (uint256) {
+        address voter = _msgSender();
+        return _castVote(proposalId, voter, support, reason);
+    }
+
     function _queueOperations(
         uint256 proposalId,
         address[] memory targets,

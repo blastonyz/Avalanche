@@ -4,15 +4,6 @@ import "./globals.css";
 import { Web3Provider } from "./context/ConnectionProvider";
 import Navbar from "./components/navbar/Navbar";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -25,17 +16,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-  <Web3Provider>
     <html lang="en">
-      
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <Navbar/>
-        {children}
+      <body>
+        <Web3Provider>
+          <Navbar />
+          {children}
+        </Web3Provider>
       </body>
-     
-    </html> 
-    </Web3Provider>
+    </html>
   );
 }

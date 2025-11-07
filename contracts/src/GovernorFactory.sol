@@ -2,17 +2,24 @@
 pragma solidity ^0.8.20;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {TimelockController} from "@openzeppelin/contracts/governance/TimelockController.sol";
+import {
+    TimelockController
+} from "@openzeppelin/contracts/governance/TimelockController.sol";
 import {SimpleGovernor} from "./SimpleGovernor.sol";
 import {Treasury} from "./Treasury.sol";
 import {DAORegistry} from "./DAORegistry.sol";
 import {IVotes} from "@openzeppelin/contracts/governance/utils/IVotes.sol";
+import {IGovernor} from "@openzeppelin/contracts/governance/IGovernor.sol";
 
 contract GovernorFactory is Ownable {
     address public immutable governorImpl;
     address public immutable treasuryImpl;
+    address public immutable timelockImpl;
     TimelockController public immutable sharedTimelock;
     DAORegistry public immutable registry;
+
+    bytes32 constant PROPOSER_ROLE = keccak256("PROPOSER_ROLE");
+    bytes32 constant EXECUTOR_ROLE = keccak256("EXECUTOR_ROLE");
 
     event DAOCreated(
         address indexed governor,
@@ -27,19 +34,21 @@ contract GovernorFactory is Ownable {
         address _treasuryImpl,
         address _registry,
         address[] memory proposers,
-        address[] memory executors,
-        address admin
+        address[] memory executors
+       
     ) Ownable(msg.sender) {
         governorImpl = _governorImpl;
         treasuryImpl = _treasuryImpl;
         registry = DAORegistry(_registry);
 
         sharedTimelock = new TimelockController(
-            60, 
+            60,
             proposers,
             executors,
-            admin
+            address(this)
         );
+
+        timelockImpl = address(sharedTimelock);
     }
 
     function deployDAO(
@@ -48,21 +57,24 @@ contract GovernorFactory is Ownable {
         address token,
         uint256 quorumPercent
     ) external returns (address governor, address treasury) {
-        
         SimpleGovernor gov = new SimpleGovernor(
             name,
             IVotes(token),
             sharedTimelock,
-            1,       
+            1,
             10 minutes,
-            1,     
+            1,
             quorumPercent,
             msg.sender
         );
+        IGovernor iGov = IGovernor(address(gov));
 
         // 🚀 Crear Treasury
         Treasury tre = new Treasury();
         tre.initialize(address(gov));
+        //Timelock permissions
+        sharedTimelock.grantRole(PROPOSER_ROLE, address(iGov));
+        sharedTimelock.grantRole(EXECUTOR_ROLE, address(iGov));
 
         // Registrar en DAORegistry
         registry.registerDAO(
@@ -75,5 +87,9 @@ contract GovernorFactory is Ownable {
 
         emit DAOCreated(address(gov), address(tre), token, name, description);
         return (address(gov), address(tre));
+    }
+
+    function getTimelocker() public view returns (address) {
+        return timelockImpl;
     }
 }

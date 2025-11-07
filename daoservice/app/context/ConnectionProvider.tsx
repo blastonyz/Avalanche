@@ -1,4 +1,3 @@
-// providers.tsx
 'use client';
 
 import '@rainbow-me/rainbowkit/styles.css';
@@ -27,7 +26,7 @@ const config = getDefaultConfig({
   transports: {
     [avalancheFuji.id]: http('https://api.avax-test.network/ext/bc/C/rpc'),
   },
-  ssr: true,
+  ssr: false, 
 });
 
 export const wagmiConfig = config;
