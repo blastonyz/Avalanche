@@ -4,12 +4,23 @@ import DAO from '@/db/models/DAO';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { daoId: string } }
+  { params }: { params: Promise<{ daoId: string }> }
 ) {
   try {
     await connectDB();
 
-    const daoId = params.daoId;
+    // In Next.js 16, params is a Promise and must be awaited
+    const { daoId } = await params;
+    
+    if (!daoId) {
+      console.error('DAO ID is missing from params');
+      return NextResponse.json(
+        { error: 'DAO ID is required' },
+        { status: 400 }
+      );
+    }
+    
+    console.log('Processing proposal for DAO:', daoId);
     const body = await request.json();
     const {
       proposalId,
@@ -152,22 +163,30 @@ export async function POST(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { daoId: string } }
+  { params }: { params: Promise<{ daoId: string }> }
 ) {
   try {
     await connectDB();
 
-    const daoId = params.daoId;
+    // In Next.js 16, params is a Promise and must be awaited
+    const { daoId } = await params;
     const dao = await DAO.findById(daoId).select('proposals');
 
     if (!dao) {
       return NextResponse.json({ error: 'DAO not found' }, { status: 404 });
     }
 
+    // Sort proposals by createdAt descending (newest first)
+    const sortedProposals = [...dao.proposals].sort((a, b) => {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return dateB - dateA; // Descending order
+    });
+
     return NextResponse.json(
       {
         success: true,
-        proposals: dao.proposals.map((p) => ({
+        proposals: sortedProposals.map((p) => ({
           proposalId: p.proposalId,
           description: p.description,
           descriptionHash: p.descriptionHash,

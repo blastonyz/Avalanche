@@ -1,11 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { encodeFunctionData } from 'viem';
+import { decodeFunctionData } from 'viem';
 import { SimpleTokenAbi } from '@/abis/SimpleTokenAbi';
-import { useGovernance } from '../../context/contracts-hooks/useGovernance';
+import { formatEther } from 'viem';
 import { useProposalState } from '../../context/contracts-hooks/governor/useProposalState';
-import { parseEther } from 'viem';
+import { useGovernorActions } from '../../context/contracts-hooks/useGovernorActions';
+import { fetchProposals, saveProposal, updateProposalState } from '@/app/services/daoService';
+import { PROPOSAL_STATES, FINAL_STATES } from '@/app/utils/governanceConstants';
+import { buildCalldata } from '@/app/utils/buildCalldata';
 import ProposalFormInputs from './ProposalFormInputs';
 import GovernanceActionButtons from './GovernanceActionButtons';
 import GovernanceMessages from './GovernanceMessages';
@@ -28,19 +31,65 @@ export default function GovernorForm({
   treasuryAddress,
   proposalId: initialProposalId,
 }: Props) {
-  const {
-    propose,
-    castVote,
-    queueProposal,
-    executeProposal,
-    delegateVotes,
-  } = useGovernance();
-
   const [recipient, setRecipient] = useState<`0x${string}` | ''>('');
   const [amount, setAmount] = useState<string>('0.1');
   const [description, setDescription] = useState<string>('');
   const [localProposalId, setLocalProposalId] = useState<bigint | null>(initialProposalId || null);
   const [descriptionHash, setDescriptionHash] = useState<`0x${string}` | null>(null);
+  const [statusCheckCount, setStatusCheckCount] = useState<number>(0);
+  const [isLoadingProposals, setIsLoadingProposals] = useState<boolean>(false);
+
+  // Load proposals from database on mount
+  useEffect(() => {
+    if (!daoId) return;
+
+    async function loadProposals() {
+      setIsLoadingProposals(true);
+      try {
+        const data = await fetchProposals(daoId!);
+        if (data.proposals && data.proposals.length > 0) {
+          // Get the most recent proposal (should be sorted by createdAt desc)
+          const latestProposal = data.proposals[0];
+          
+          // Restore proposal state
+          if (latestProposal.proposalId) {
+            setLocalProposalId(BigInt(latestProposal.proposalId));
+          }
+          if (latestProposal.descriptionHash) {
+            setDescriptionHash(latestProposal.descriptionHash as `0x${string}`);
+          }
+          if (latestProposal.description) {
+            setDescription(latestProposal.description);
+          }
+          // Restore recipient and amount from calldata if possible
+          if (latestProposal.calldatas && latestProposal.calldatas.length > 0 && latestProposal.calldatas[0]) {
+            try {
+              const decoded = decodeFunctionData({
+                abi: SimpleTokenAbi,
+                data: latestProposal.calldatas[0] as `0x${string}`,
+              });
+              
+              if (decoded.functionName === 'transfer' && decoded.args) {
+                const [decodedRecipient, decodedAmount] = decoded.args as [`0x${string}`, bigint];
+                setRecipient(decodedRecipient);
+                setAmount(formatEther(decodedAmount));
+              }
+            } catch (err) {
+              console.warn('Failed to decode calldata:', err);
+            }
+          }
+          
+          console.log('✅ Loaded proposal from database:', latestProposal);
+        }
+      } catch (err) {
+        console.warn('Failed to load proposals from database:', err);
+      } finally {
+        setIsLoadingProposals(false);
+      }
+    }
+
+    loadProposals();
+  }, [daoId]);
 
   // Check proposal state if we have a proposal ID
   const { data: proposalState, refetch: refetchState } = useProposalState({
@@ -49,40 +98,69 @@ export default function GovernorForm({
   });
 
   // Refetch state periodically when we have a proposal
+  // Stop checking when proposal reaches a final state
   useEffect(() => {
     if (!localProposalId) return;
     
+    // Reset counter when proposal changes
+    setStatusCheckCount(0);
+    
+    // If already in a final state, don't start interval
+    if (
+      proposalState !== undefined &&
+      proposalState !== null &&
+      typeof proposalState === 'number' &&
+      FINAL_STATES.includes(proposalState)
+    ) {
+      return;
+    }
+    
     const interval = setInterval(() => {
+      setStatusCheckCount((prev) => prev + 1);
       refetchState();
-    }, 5000); // Check every 5 seconds
+    }, 60000); // Check every 1 minute
 
     return () => clearInterval(interval);
-  }, [localProposalId, refetchState]);
+  }, [localProposalId, refetchState, proposalState]);
 
-  const canQueue = proposalState === 4; // Succeeded state
-  const isQueued = proposalState === 5;
-  const isExecuted = proposalState === 7;
+  const canQueue = proposalState === PROPOSAL_STATES.SUCCEEDED;
+  const isQueued = proposalState === PROPOSAL_STATES.QUEUED;
+  const isExecuted = proposalState === PROPOSAL_STATES.EXECUTED;
+  const canExecute = proposalState === PROPOSAL_STATES.QUEUED;
 
-  // Helper function to update proposal state in database
-  const updateProposalState = async (newState: number) => {
-    if (!daoId || !localProposalId || !descriptionHash) return;
-
-    try {
-      await fetch(`/api/dao/${daoId}/proposal`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          proposalId: localProposalId.toString(),
-          descriptionHash, // Required to identify the proposal
-          state: newState,
-        }),
-      });
-    } catch (err) {
-      console.warn('Failed to update proposal state in database:', err);
-    }
-  };
+  // Use the new useGovernorActions hook
+  const {
+    propose,
+    delegate,
+    vote,
+    queue,
+    execute,
+    isProposing,
+    isDelegating,
+    isVoting,
+    isQueueing,
+    isExecuting,
+    proposeError,
+    delegateError,
+    voteError,
+    queueError,
+    executeError,
+    isProposalSuccess,
+    isDelegateSuccess,
+    isVoteSuccess,
+    isQueueSuccess,
+    isExecuteSuccess,
+  } = useGovernorActions({
+    governorAddress,
+    tokenAddress,
+    userAddress,
+    recipient,
+    amount,
+    description,
+    proposalId: localProposalId,
+    proposalState: proposalState as number | null,
+    treasuryAddress,
+  });
 
   // Update proposal state in database when it changes
   useEffect(() => {
@@ -94,203 +172,90 @@ export default function GovernorForm({
       localProposalId &&
       descriptionHash
     ) {
-      updateProposalState(proposalState);
+      updateProposalState(
+        daoId,
+        localProposalId.toString(),
+        descriptionHash,
+        proposalState
+      ).catch((err) => {
+        console.warn('Failed to update proposal state in database:', err);
+      });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [proposalState]);
-
-  // ✅ Propose
-  const {
-    mutateAsync: proposeAsync,
-    isPending: isProposing,
-    isSuccess: isProposalSuccess,
-    error: proposeError,
-  } = propose;
-
-  // ✅ Delegate
-  const {
-    mutateAsync: delegateAsync,
-    isPending: isDelegating,
-    isSuccess: isDelegateSuccess,
-    error: delegateError,
-  } = delegateVotes;
-
-  // ✅ Vote
-  const {
-    mutateAsync: voteAsync,
-    isPending: isVoting,
-    isSuccess: isVoteSuccess,
-    error: voteError,
-  } = castVote;
-
-  const {
-    mutateAsync: queueProposalAsync,
-    isPending: isQueueing,
-    isSuccess: isQueueSuccescess,
-    error: queueError,
-  } = queueProposal;
+  }, [proposalState, daoId, localProposalId, descriptionHash]);
 
   const handleSubmit = async () => {
-    if (!recipient || !description) {
-      alert('Please fill in recipient address and description');
-      return;
-    }
+    try {
+      const result = await propose();
+      
+      setLocalProposalId(result.proposalId);
+      setDescriptionHash(result.descriptionHash);
+      
+      console.log('✅ propId:', result.proposalId);
+      console.log('desc hash:', result.descriptionHash);
 
-    const parsedAmount = parseEther(amount);
-    const calldata = encodeFunctionData({
-      abi: SimpleTokenAbi,
-      functionName: 'transfer',
-      args: [recipient as `0x${string}`, parsedAmount],
-    });
-
-    const result = await proposeAsync({
-      governorAddress,
-      target: tokenAddress,
-      value: 0n,
-      calldata,
-      description,
-    });
-
-    setLocalProposalId(result.proposalId);
-    console.log('✅ propId:', result.proposalId);
-
-    setDescriptionHash(result.descriptionHash);
-    console.log("desc hash: ", result.descriptionHash);
-
-    // Save proposal to database if daoId is available
-    if (daoId) {
-      try {
-        const response = await fetch(`/api/dao/${daoId}/proposal`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
+      // Save proposal to database if daoId is available
+      if (daoId) {
+        try {
+          const actionType = treasuryAddress && recipient === treasuryAddress 
+            ? 'TRANSFER_TO_TREASURY' 
+            : 'TRANSFER';
+          
+          await saveProposal(daoId, {
             proposalId: result.proposalId.toString(),
             description,
             descriptionHash: result.descriptionHash,
-            actionType: treasuryAddress && recipient === treasuryAddress 
-              ? 'TRANSFER_TO_TREASURY' 
-              : 'TRANSFER',
+            actionType,
             targets: [tokenAddress],
             values: ['0'],
-            calldatas: [calldata],
-            state: 0, // Pending
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-          console.warn('Failed to save proposal to database:', errorData);
-        } else {
-          const savedProposal = await response.json();
-          console.log('✅ Proposal saved to database:', savedProposal);
+            calldatas: [buildCalldata(recipient as `0x${string}`, amount)],
+            state: PROPOSAL_STATES.PENDING,
+          });
+          
+          console.log('✅ Proposal saved to database');
+        } catch (dbErr: any) {
+          console.warn('Error saving proposal to database:', dbErr);
+          // Don't throw - proposal was created successfully on-chain
         }
-      } catch (dbErr: any) {
-        console.warn('Error saving proposal to database:', dbErr);
-        // Don't throw - proposal was created successfully on-chain
       }
+    } catch (error: any) {
+      alert(error.message || 'Failed to create proposal');
     }
   };
 
-
   const handleDelegate = async () => {
-    await delegateAsync({
-      tokenAddress,
-      delegateTo: userAddress,
-    });
+    try {
+      await delegate();
+    } catch (error: any) {
+      alert(error.message || 'Failed to delegate votes');
+    }
   };
 
   const handleVote = async () => {
-    console.log('🔍 handleVote iniciado. proposalId:', localProposalId);
-    if (!localProposalId) {
-      console.warn('⚠️ No hay proposalId, abortando voto');
-      alert('Please create a proposal first or enter a proposal ID');
-      return;
+    try {
+      await vote();
+    } catch (error: any) {
+      alert(error.message || 'Failed to vote');
     }
-
-    await voteAsync({
-      governorAddress,
-      proposalId: localProposalId,
-      support: 1,
-      reason: 'Apoyo total',
-    });
   };
 
   const handleQueue = async () => {
-    if (!descriptionHash || !description || !recipient) {
-      alert('Please create a proposal first');
-      return;
-    }
-
-    if (!localProposalId) {
-      alert('No proposal ID available');
-      return;
-    }
-
-    // Check proposal state before queueing
-    if (proposalState !== 4) {
-      const stateNames: Record<number, string> = {
-        0: 'Pending',
-        1: 'Active',
-        2: 'Canceled',
-        3: 'Defeated',
-        4: 'Succeeded',
-        5: 'Queued',
-        6: 'Expired',
-        7: 'Executed',
-      };
-      const currentState = stateNames[proposalState as number] || 'Unknown';
-      alert(`Cannot queue proposal. Current state: ${currentState}. Proposal must be in "Succeeded" state to queue.`);
-      return;
-    }
-
     try {
-      const parsedAmount = parseEther(amount);
-      const calldata = encodeFunctionData({
-        abi: SimpleTokenAbi,
-        functionName: 'transfer',
-        args: [recipient as `0x${string}`, parsedAmount],
-      });
-
-      console.log("calldata: ", calldata);
-      
-      await queueProposalAsync({
-        governorAddress,
-        target: tokenAddress,
-        value: 0n,
-        calldata,
-        description
-      });
-
+      await queue();
       // Refetch state after queueing
       setTimeout(() => refetchState(), 2000);
     } catch (error: any) {
-      console.error('Queue error:', error);
-      if (error?.shortMessage?.includes('state')) {
-        alert('Proposal is not in the correct state to be queued. It must be "Succeeded". Please check the proposal state.');
-      } else {
-        alert(`Failed to queue proposal: ${error?.shortMessage || error?.message || 'Unknown error'}`);
-      }
+      alert(error.message || 'Failed to queue proposal');
     }
   };
 
   const handleExecute = async () => {
-    if (!descriptionHash || !description) {
-      alert('Please create a proposal first');
-      return;
+    try {
+      await execute();
+      // Refetch state after execution
+      setTimeout(() => refetchState(), 2000);
+    } catch (error: any) {
+      alert(error.message || 'Failed to execute proposal');
     }
-
-    const parsedAmount = parseEther(amount);
-    const calldata = encodeFunctionData({
-      abi: SimpleTokenAbi,
-      functionName: 'transfer',
-      args: [recipient, parsedAmount],
-    });
-
-    // Note: You'll need to add executeProposal mutation from useGovernance
-    // This is a placeholder for the execute functionality
-    console.log('Execute proposal:', { governorAddress, target: tokenAddress, calldata, description });
   };
 
   return (
@@ -322,13 +287,16 @@ export default function GovernorForm({
         onDelegate={handleDelegate}
         onVote={handleVote}
         onQueue={handleQueue}
+        onExecute={handleExecute}
         isProposing={isProposing}
         isDelegating={isDelegating}
         isVoting={isVoting}
         isQueueing={isQueueing}
+        isExecuting={isExecuting}
         canPropose={!!recipient && !!description}
         canVote={!!localProposalId}
         canQueue={canQueue}
+        canExecute={canExecute}
         isQueued={isQueued}
         isExecuted={isExecuted}
         proposalState={proposalState as number | null | undefined}
@@ -338,18 +306,21 @@ export default function GovernorForm({
         isProposalSuccess={isProposalSuccess}
         isDelegateSuccess={isDelegateSuccess}
         isVoteSuccess={isVoteSuccess}
+        isExecuteSuccess={isExecuteSuccess}
         proposeError={proposeError}
         delegateError={delegateError}
         voteError={voteError}
         queueError={queueError}
+        executeError={executeError}
       />
 
       <ProposalStateDisplay
         proposalId={localProposalId}
         proposalState={proposalState as number | null | undefined}
         descriptionHash={descriptionHash}
+        statusCheckCount={statusCheckCount}
+        isLoadingProposals={isLoadingProposals}
       />
-
     </div>
   );
 }

@@ -1,32 +1,26 @@
 'use client';
 
+import { getStateName } from '@/app/utils/governanceConstants';
+
 type GovernanceActionButtonsProps = {
   onPropose: () => void;
   onDelegate: () => void;
   onVote: () => void;
   onQueue: () => void;
+  onExecute: () => void;
   isProposing: boolean;
   isDelegating: boolean;
   isVoting: boolean;
   isQueueing: boolean;
+  isExecuting: boolean;
   canPropose: boolean;
   canVote: boolean;
   canQueue: boolean;
+  canExecute: boolean;
   isQueued: boolean;
   isExecuted: boolean;
   proposalState?: number | null;
   queueTooltip?: string;
-};
-
-const stateNames: Record<number, string> = {
-  0: 'Pending',
-  1: 'Active',
-  2: 'Canceled',
-  3: 'Defeated',
-  4: 'Succeeded',
-  5: 'Queued',
-  6: 'Expired',
-  7: 'Executed',
 };
 
 export default function GovernanceActionButtons({
@@ -34,13 +28,16 @@ export default function GovernanceActionButtons({
   onDelegate,
   onVote,
   onQueue,
+  onExecute,
   isProposing,
   isDelegating,
   isVoting,
   isQueueing,
+  isExecuting,
   canPropose,
   canVote,
   canQueue,
+  canExecute,
   isQueued,
   isExecuted,
   proposalState,
@@ -79,7 +76,7 @@ export default function GovernanceActionButtons({
         title={
           queueTooltip ||
           (!canQueue && proposalState !== undefined
-            ? `Cannot queue. Current state: ${stateNames[proposalState as number]}. Must be "Succeeded".`
+            ? `Cannot queue. Current state: ${getStateName(proposalState)}. Must be "Succeeded".`
             : isQueued
             ? 'Proposal is already queued'
             : isExecuted
@@ -94,6 +91,21 @@ export default function GovernanceActionButtons({
           : isExecuted
           ? 'Executed'
           : 'Queue Proposal'}
+      </button>
+
+      <button
+        onClick={onExecute}
+        disabled={isExecuting || !canExecute || isExecuted}
+        className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+        title={
+          !canExecute && proposalState !== undefined
+            ? `Cannot execute. Current state: ${getStateName(proposalState)}. Must be "Queued".`
+            : isExecuted
+            ? 'Proposal is already executed'
+            : 'Execute the queued proposal'
+        }
+      >
+        {isExecuting ? 'Ejecutando...' : isExecuted ? 'Executed' : 'Execute Proposal'}
       </button>
     </div>
   );
