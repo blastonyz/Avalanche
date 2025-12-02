@@ -92,8 +92,44 @@ export function useDeployDao(factoryAddress: Address) {
                 console.log('gov: ',governor);
                 console.log('treasury: ',treasury);
                 
+                // 4) Save DAO data to MongoDB
+                try {
+                    const response = await fetch('/api/dao', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            name: cleanName,
+                            description: cleanDescription,
+                            creator: account,
+                            governorAddress: governor,
+                            tokenAddress: params.token,
+                            treasury: treasury,
+                            metadata: {
+                                transactionHash: hash,
+                                quorumPercent: params.quorumPercent,
+                                deployedAt: new Date().toISOString(),
+                            },
+                        }),
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+                        console.warn('Failed to save DAO to database:', errorData);
+                        // Don't throw here - the on-chain deployment was successful
+                        // Just log the warning
+                    } else {
+                        const savedDAO = await response.json();
+                        console.log('DAO saved to database:', savedDAO);
+                    }
+                } catch (dbErr: any) {
+                    console.warn('Error saving DAO to database:', dbErr);
+                    // Don't throw here - the on-chain deployment was successful
+                    // The database save is a secondary operation
+                }
                 
-                return {hash,governor,treasury}
+                return {hash, governor, treasury}
 
             } catch (sendErr: any) {
                 console.error('Deploy failed:', sendErr?.shortMessage ?? sendErr?.message ?? sendErr);

@@ -1,41 +1,17 @@
-import { useState, useEffect } from "react";
-import { getWalletClient } from "wagmi/actions";
-import { wagmiConfig } from "../ConnectionProvider";
+import { useAccount, useWalletClient } from "wagmi";
 import type { WalletClient } from 'viem';
 
-
+/**
+ * Hook that provides wallet client and account using Wagmi's built-in hooks.
+ * This ensures proper integration with Wagmi's connection management.
+ */
 export function useWalletReady() {
-    const [walletClient, setWalletClient] = useState<WalletClient | null>(null);
-    const [account, setAccount] = useState<`0x${string}` | null>(null);
+    const { address: account, isConnected } = useAccount();
+    const { data: walletClient } = useWalletClient();
 
-    useEffect(() => {
-        async function syncWallet() {
-            try {
-                const walletClient = await getWalletClient(wagmiConfig);
-                if (!walletClient) return;
-                const addresses = await walletClient.getAddresses();
-                setWalletClient(walletClient);
-                setAccount(addresses[0]);
-            } catch (err) {
-                console.warn('Wallet sync failed:', err);
-                setWalletClient(null);
-                setAccount(null);
-            }
-        }
-
-        syncWallet();
-
-        window.ethereum?.on('accountsChanged', syncWallet);
-        window.ethereum?.on('disconnect', () => {
-            setWalletClient(null);
-            setAccount(null);
-        });
-
-        return () => {
-            window.ethereum?.removeListener('accountsChanged', syncWallet);
-            window.ethereum?.removeListener('disconnect', () => { });
-        };
-    }, []);
-
-    return { walletClient, account };
+    return { 
+        walletClient: walletClient || null, 
+        account: account || null,
+        isConnected 
+    };
 }
