@@ -1,14 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { decodeFunctionData } from 'viem';
-import { SimpleTokenAbi } from '@/abis/SimpleTokenAbi';
-import { formatEther } from 'viem';
 import { useProposalState } from '../../context/contracts-hooks/governor/useProposalState';
 import { useGovernorActions } from '../../context/contracts-hooks/useGovernorActions';
 import { fetchProposals, saveProposal, updateProposalState } from '@/app/services/daoService';
 import { PROPOSAL_STATES, FINAL_STATES } from '@/app/utils/governanceConstants';
 import { buildCalldata } from '@/app/utils/buildCalldata';
+import { restoreProposalState } from './helpers/proposalHelpers';
 import ProposalFormInputs from './ProposalFormInputs';
 import GovernanceActionButtons from './GovernanceActionButtons';
 import GovernanceMessages from './GovernanceMessages';
@@ -47,40 +45,24 @@ export default function GovernorForm({
       setIsLoadingProposals(true);
       try {
         const data = await fetchProposals(daoId!);
-        if (data.proposals && data.proposals.length > 0) {
-          // Get the most recent proposal (should be sorted by createdAt desc)
-          const latestProposal = data.proposals[0];
-          
-          // Restore proposal state
-          if (latestProposal.proposalId) {
-            setLocalProposalId(BigInt(latestProposal.proposalId));
-          }
-          if (latestProposal.descriptionHash) {
-            setDescriptionHash(latestProposal.descriptionHash as `0x${string}`);
-          }
-          if (latestProposal.description) {
-            setDescription(latestProposal.description);
-          }
-          // Restore recipient and amount from calldata if possible
-          if (latestProposal.calldatas && latestProposal.calldatas.length > 0 && latestProposal.calldatas[0]) {
-            try {
-              const decoded = decodeFunctionData({
-                abi: SimpleTokenAbi,
-                data: latestProposal.calldatas[0] as `0x${string}`,
-              });
-              
-              if (decoded.functionName === 'transfer' && decoded.args) {
-                const [decodedRecipient, decodedAmount] = decoded.args as [`0x${string}`, bigint];
-                setRecipient(decodedRecipient);
-                setAmount(formatEther(decodedAmount));
-              }
-            } catch (err) {
-              console.warn('Failed to decode calldata:', err);
-            }
-          }
-          
-          console.log('✅ Loaded proposal from database:', latestProposal);
-        }
+        
+        const hasProposals = data.proposals && data.proposals.length > 0;
+        if (!hasProposals) return;
+
+        // Get the most recent proposal (should be sorted by createdAt desc)
+        const latestProposal = data.proposals[0];
+        
+        // Restore proposal state using helper function
+        const restoredState = restoreProposalState(latestProposal);
+        
+        // Apply restored state to component
+        setLocalProposalId(restoredState.proposalId);
+        setDescriptionHash(restoredState.descriptionHash);
+        setDescription(restoredState.description);
+        setRecipient(restoredState.recipient);
+        setAmount(restoredState.amount);
+        
+        console.log('✅ Loaded proposal from database:', latestProposal);
       } catch (err) {
         console.warn('Failed to load proposals from database:', err);
       } finally {
