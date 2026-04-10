@@ -22,43 +22,43 @@ export default function ProposalFormInputs({
   setProposalId,
 }: ProposalFormInputsProps) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-4">
       <div>
-        <label className="block text-sm font-medium mb-1">Recipient Address</label>
+        <label className="mb-1 block text-sm font-medium text-slate-700">Recipient Address</label>
         <input
           type="text"
           placeholder="0x..."
           value={recipient}
           onChange={(e) => setRecipient(e.target.value as `0x${string}`)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 font-mono text-xs outline-none transition focus:border-cyan-500"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Amount (AVAX)</label>
+        <label className="mb-1 block text-sm font-medium text-slate-700">Amount (AVAX)</label>
         <input
           type="number"
           placeholder="0.1"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 outline-none transition focus:border-cyan-500"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Proposal Description</label>
+        <label className="mb-1 block text-sm font-medium text-slate-700">Proposal Description</label>
         <textarea
           placeholder="Describe your proposal..."
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 outline-none transition focus:border-cyan-500"
           rows={3}
         />
       </div>
 
       {proposalId && (
         <div>
-          <label className="block text-sm font-medium mb-1">Proposal ID (optional)</label>
+          <label className="mb-1 block text-sm font-medium text-slate-700">Proposal ID (optional)</label>
           <input
             type="text"
             placeholder="Enter proposal ID to vote on existing proposal"
@@ -70,7 +70,7 @@ export default function ProposalFormInputs({
                 // Invalid bigint, ignore
               }
             }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 font-mono text-xs outline-none transition focus:border-cyan-500"
           />
         </div>
       )}

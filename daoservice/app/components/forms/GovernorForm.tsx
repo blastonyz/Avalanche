@@ -242,9 +242,9 @@ export default function GovernorForm({
 
   return (
     <div className="space-y-4">
-      <div className="border-b pb-3">
-        <h2 className="text-xl font-bold">Governance Actions</h2>
-        <div className="mt-2 text-sm text-gray-600 space-y-1">
+      <div className="rounded-lg border border-slate-200 bg-white p-4">
+        <h2 className="text-xl font-bold text-slate-900">Governance Actions</h2>
+        <div className="mt-3 space-y-2 text-sm text-slate-600">
           <p><strong>Governor:</strong> <span className="font-mono text-xs">{governorAddress}</span></p>
           <p><strong>Token:</strong> <span className="font-mono text-xs">{tokenAddress}</span></p>
           {treasuryAddress && (

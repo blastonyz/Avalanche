@@ -21,16 +21,16 @@ export default function ProposalStateDisplay({
 
   if (isLoadingProposals) {
     return (
-      <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
-        <p className="text-sm text-gray-600">Loading proposal from database...</p>
+      <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-3">
+        <p className="text-sm text-slate-600">Loading proposal from database...</p>
       </div>
     );
   }
 
   return (
-    <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
-      <p className="text-sm font-medium mb-2">Current Proposal</p>
-      <p className="text-xs text-gray-600 font-mono break-all mb-2">
+    <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-3">
+      <p className="mb-2 text-sm font-medium text-slate-800">Current Proposal</p>
+      <p className="mb-2 break-all font-mono text-xs text-slate-600">
         Proposal ID: {proposalId.toString()}
       </p>
       {proposalState !== undefined && (
@@ -46,13 +46,13 @@ export default function ProposalStateDisplay({
                 ? 'text-purple-600' // Executed
                 : proposalState === PROPOSAL_STATES.DEFEATED
                 ? 'text-red-600' // Defeated
-                : 'text-gray-600'
+                : 'text-slate-600'
             }`}
           >
             {getStateName(proposalState)}
           </span>
           {proposalState === PROPOSAL_STATES.ACTIVE && (
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="mt-1 text-xs text-slate-500">
               ⏳ Waiting for voting period to end...
             </p>
           )}
@@ -69,13 +69,13 @@ export default function ProposalStateDisplay({
         </div>
       )}
       {descriptionHash && (
-        <p className="text-xs text-gray-600 font-mono break-all mt-1">
+        <p className="mt-1 break-all font-mono text-xs text-slate-600">
           Description Hash: {descriptionHash}
         </p>
       )}
       {statusCheckCount > 0 && (
-        <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-xs text-gray-500">
+        <div className="mt-2 border-t border-slate-200 pt-2">
+          <p className="text-xs text-slate-500">
             🔄 Status checked {statusCheckCount} time{statusCheckCount !== 1 ? 's' : ''} 
             {proposalState === PROPOSAL_STATES.ACTIVE && ' (checking every 1 minute...)'}
           </p>

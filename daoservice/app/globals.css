@@ -1,26 +1,73 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #05070b;
+  --foreground: #e6edf8;
+  --surface: #0d1220;
+  --surface-soft: #111a2d;
+  --line: rgba(123, 158, 219, 0.2);
+  --accent: #4db8ff;
+  --accent-strong: #1f9fea;
+  --muted: #94a4c3;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-space-grotesk);
+  --font-mono: var(--font-ibm-plex-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #05070b;
+    --foreground: #e6edf8;
   }
 }
 
 body {
-  background: var(--background);
+  background:
+    radial-gradient(1200px 560px at 75% -10%, rgba(77, 184, 255, 0.2), transparent 60%),
+    radial-gradient(900px 420px at -10% 30%, rgba(34, 197, 255, 0.12), transparent 60%),
+    var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-space-grotesk), sans-serif;
+  min-height: 100vh;
+}
+
+* {
+  border-color: var(--line);
+}
+
+.glass-panel {
+  background: linear-gradient(140deg, rgba(12, 21, 37, 0.86), rgba(8, 14, 25, 0.72));
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--line);
+  box-shadow: 0 24px 80px rgba(1, 5, 13, 0.45);
+}
+
+.title-gradient {
+  background: linear-gradient(100deg, #ffffff 0%, #cfe6ff 40%, #84cfff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.neo-button {
+  background: linear-gradient(130deg, #1d304f, #0f1f39);
+  border: 1px solid rgba(128, 176, 255, 0.4);
+  transition: all 0.25s ease;
+}
+
+.neo-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 30px rgba(24, 116, 178, 0.3);
+  border-color: rgba(128, 176, 255, 0.7);
+}
+
+.section-grid {
+  background-image:
+    linear-gradient(to right, rgba(120, 154, 206, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(120, 154, 206, 0.08) 1px, transparent 1px);
+  background-size: 30px 30px;
 }

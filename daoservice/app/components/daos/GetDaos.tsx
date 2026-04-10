@@ -49,19 +49,19 @@ export default function GetDaos() {
 
   if (isLoading) {
     return (
-      <div className="p-4">
-        <p className="text-gray-600">Loading DAOs...</p>
+      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <p className="text-slate-600">Loading DAOs...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-4">
-        <p className="text-red-600">Error loading DAOs: {(error as Error).message}</p>
+      <div className="rounded-xl border border-rose-200 bg-rose-50 p-4">
+        <p className="text-rose-700">Error loading DAOs: {(error as Error).message}</p>
         <button
           onClick={() => refetch()}
-          className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          className="mt-3 rounded-md bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700"
         >
           Retry
         </button>
@@ -71,8 +71,8 @@ export default function GetDaos() {
 
   if (!daos || daos.length === 0) {
     return (
-      <div className="p-4">
-        <p className="text-gray-600">No DAOs found. Deploy a new DAO to get started!</p>
+      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <p className="text-slate-600">No DAOs found. Deploy a new DAO to get started.</p>
       </div>
     );
   }
@@ -84,17 +84,17 @@ export default function GetDaos() {
 
   return (
     <div className="space-y-6 w-full">
-      <div className="border-b pb-4">
+      <div className="border-b border-slate-200 pb-4">
         <h2 className="text-2xl font-bold mb-2">
           {selectedDAO ? selectedDAO.name : 'Available DAOs'}
         </h2>
-        <p className="text-gray-600">
+        <p className="text-slate-600">
           {selectedDAO
             ? 'Governance actions and proposals'
             : 'Select a DAO to interact with governance proposals'}
         </p>
         {!selectedDAO && validDAOs.length < daos.length && (
-          <p className="text-sm text-yellow-600 mt-2">
+          <p className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
             ⚠️ {daos.length - validDAOs.length} DAO(s) skipped due to missing required fields
           </p>
         )}
@@ -104,12 +104,12 @@ export default function GetDaos() {
       {selectedDAO ? (
         <div className="space-y-4">
           {/* Selected DAO Card */}
-          <div className="p-4 border-2 border-blue-500 rounded-lg bg-blue-50 dark:bg-blue-900/20">
+          <div className="rounded-xl border border-cyan-200 bg-cyan-50/50 p-5">
             <div className="flex justify-between items-start mb-3">
               <div className="flex-1">
-                <h3 className="text-lg font-semibold mb-1">{selectedDAO.name}</h3>
-                <p className="text-sm text-gray-600 mb-2">{selectedDAO.description}</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-500">
+                <h3 className="mb-1 text-lg font-semibold text-slate-900">{selectedDAO.name}</h3>
+                <p className="mb-3 text-sm text-slate-600">{selectedDAO.description}</p>
+                <div className="grid grid-cols-1 gap-2 text-xs text-slate-600 md:grid-cols-2">
                   <div>
                     <span className="font-medium">Governor:</span>{' '}
                     <span className="font-mono">{formatAddress(selectedDAO.governorAddress)}</span>
@@ -130,7 +130,7 @@ export default function GetDaos() {
               </div>
               <button
                 onClick={() => setSelectedDAO(null)}
-                className="ml-4 p-2 text-gray-500 hover:text-gray-700 hover:bg-white dark:hover:bg-gray-800 rounded-full transition-colors"
+                className="ml-4 rounded-full p-2 text-slate-500 transition-colors hover:bg-white hover:text-slate-800"
                 title="Deselect DAO"
                 aria-label="Deselect DAO"
               >
@@ -152,21 +152,21 @@ export default function GetDaos() {
         /* Full DAO List */
         <div className="grid gap-4">
           {validDAOs.length === 0 ? (
-            <div className="p-4 text-center text-gray-600">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center text-slate-600">
               <p>No valid DAOs found. All DAOs are missing required fields.</p>
             </div>
           ) : (
             validDAOs.map((dao) => (
               <div
                 key={dao._id}
-                className="p-4 border rounded-lg cursor-pointer transition-all border-gray-200 hover:border-gray-300 hover:shadow-md"
+                className="cursor-pointer rounded-xl border border-slate-200 bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-cyan-200 hover:shadow-lg"
                 onClick={() => setSelectedDAO(dao)}
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold mb-1">{dao.name}</h3>
-                    <p className="text-sm text-gray-600 mb-2">{dao.description}</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-500">
+                    <h3 className="mb-1 text-lg font-semibold text-slate-900">{dao.name}</h3>
+                    <p className="mb-3 text-sm text-slate-600">{dao.description}</p>
+                    <div className="grid grid-cols-1 gap-2 text-xs text-slate-600 md:grid-cols-2">
                       <div>
                         <span className="font-medium">Governor:</span>{' '}
                         <span className="font-mono">{formatAddress(dao.governorAddress)}</span>
@@ -190,7 +190,7 @@ export default function GetDaos() {
                       e.stopPropagation();
                       setSelectedDAO(dao);
                     }}
-                    className="ml-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+                    className="neo-button ml-4 rounded-lg px-4 py-2 text-sm font-semibold text-white"
                   >
                     Select
                   </button>
@@ -203,8 +203,8 @@ export default function GetDaos() {
 
       {/* Governance Form for Selected DAO */}
       {selectedDAO && userAddress && selectedDAO.governorAddress && selectedDAO.tokenAddress && (
-        <div className="mt-8 pt-6 border-t">
-          <h3 className="text-xl font-bold mb-4">
+        <div className="mt-8 rounded-xl border border-slate-200 bg-[#f8fbff] p-5">
+          <h3 className="mb-4 text-xl font-bold text-slate-900">
             Governance Actions for: {selectedDAO.name}
           </h3>
           <GovernorForm
@@ -218,8 +218,8 @@ export default function GetDaos() {
       )}
 
       {selectedDAO && !userAddress && (
-        <div className="mt-8 pt-6 border-t">
-          <p className="text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded">
+        <div className="mt-8">
+          <p className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-700">
             ⚠️ Please connect your wallet to interact with {selectedDAO.name}
           </p>
         </div>

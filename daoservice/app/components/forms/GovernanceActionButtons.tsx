@@ -43,12 +43,14 @@ export default function GovernanceActionButtons({
   proposalState,
   queueTooltip,
 }: GovernanceActionButtonsProps) {
+  const baseButton = 'rounded-md px-4 py-2 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50';
+
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
       <button
         onClick={onPropose}
         disabled={isProposing || !canPropose}
-        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+        className={`${baseButton} bg-cyan-600 hover:bg-cyan-700`}
       >
         {isProposing ? 'Procesando...' : 'Create Proposal'}
       </button>
@@ -56,7 +58,7 @@ export default function GovernanceActionButtons({
       <button
         onClick={onDelegate}
         disabled={isDelegating}
-        className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+        className={`${baseButton} bg-emerald-600 hover:bg-emerald-700`}
       >
         {isDelegating ? 'Delegando...' : 'Delegate Votes'}
       </button>
@@ -64,7 +66,7 @@ export default function GovernanceActionButtons({
       <button
         onClick={onVote}
         disabled={isVoting || !canVote}
-        className="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+        className={`${baseButton} bg-indigo-600 hover:bg-indigo-700`}
       >
         {isVoting ? 'Votando...' : 'Vote (Support)'}
       </button>
@@ -72,7 +74,7 @@ export default function GovernanceActionButtons({
       <button
         onClick={onQueue}
         disabled={isQueueing || !canQueue || isQueued || isExecuted}
-        className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+        className={`${baseButton} bg-amber-600 hover:bg-amber-700`}
         title={
           queueTooltip ||
           (!canQueue && proposalState !== undefined
@@ -96,7 +98,7 @@ export default function GovernanceActionButtons({
       <button
         onClick={onExecute}
         disabled={isExecuting || !canExecute || isExecuted}
-        className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+        className={`${baseButton} bg-rose-600 hover:bg-rose-700`}
         title={
           !canExecute && proposalState !== undefined
             ? `Cannot execute. Current state: ${getStateName(proposalState)}. Must be "Queued".`

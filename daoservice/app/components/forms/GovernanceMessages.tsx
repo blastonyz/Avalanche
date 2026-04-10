@@ -28,28 +28,28 @@ export default function GovernanceMessages({
   return (
     <>
       {isProposalSuccess && (
-        <p className="text-green-600">✅ Propuesta creada</p>
+        <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700">✅ Propuesta creada</p>
       )}
       {isDelegateSuccess && (
-        <p className="text-green-600">✅ Votos delegados</p>
+        <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700">✅ Votos delegados</p>
       )}
-      {isVoteSuccess && <p className="text-green-600">✅ Voto emitido</p>}
-      {isExecuteSuccess && <p className="text-green-600">✅ Propuesta ejecutada</p>}
+      {isVoteSuccess && <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700">✅ Voto emitido</p>}
+      {isExecuteSuccess && <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700">✅ Propuesta ejecutada</p>}
 
       {hasError && (
-        <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-          <p className="text-red-600 font-medium mb-1">Error:</p>
-          <p className="text-sm text-red-600">
+        <div className="mt-2 rounded-md border border-rose-200 bg-rose-50 p-3">
+          <p className="mb-1 font-medium text-rose-700">Error:</p>
+          <p className="text-sm text-rose-700">
             {(proposeError || delegateError || voteError || queueError || executeError as Error).message}
           </p>
           {queueError && (
-            <p className="text-xs text-red-500 mt-2">
+            <p className="mt-2 text-xs text-rose-600">
               💡 Tip: Make sure the proposal is in "Succeeded" state before queueing. The voting
               period must have ended and the proposal must have reached quorum.
             </p>
           )}
           {executeError && (
-            <p className="text-xs text-red-500 mt-2">
+            <p className="mt-2 text-xs text-rose-600">
               💡 Tip: Make sure the proposal is in "Queued" state and the timelock delay has expired before executing.
             </p>
           )}
