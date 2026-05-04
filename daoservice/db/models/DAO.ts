@@ -151,8 +151,7 @@ const DAOSchema = new Schema<IDAO>(
   }
 );
 
-// Create index on governorAddress for faster lookups
-DAOSchema.index({ governorAddress: 1 });
+// Create index on creator for faster lookups
 DAOSchema.index({ creator: 1 });
 
 // Prevent model re-compilation during hot reloads in development
