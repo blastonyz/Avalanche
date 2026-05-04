@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/db/db';
-import DAO from '@/db/models/DAO';
+import DAO, { IProposal } from '@/db/models/DAO';
 
 export async function POST(
   request: NextRequest,
@@ -60,7 +60,7 @@ export async function POST(
 
     // Check if proposal already exists
     const existingProposalIndex = dao.proposals.findIndex(
-      (p) => p.proposalId === proposalIdString
+      (p: IProposal) => p.proposalId === proposalIdString
     );
 
     const isUpdate = existingProposalIndex >= 0;
@@ -122,7 +122,7 @@ export async function POST(
       // Add new proposal (only one active at a time - remove others if state is Active)
       if (state === 1) {
         // Remove other active proposals (state 1)
-        dao.proposals = dao.proposals.filter((p) => p.state !== 1);
+        dao.proposals = dao.proposals.filter((p: IProposal) => p.state !== 1);
       }
       dao.proposals.push(proposalData as any);
     }
