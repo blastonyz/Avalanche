@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
-import { Web3Provider } from "./context/ConnectionProvider";
-import Navbar from "./components/navbar/Navbar";
+import Providers from "./providers";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -28,10 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${spaceGrotesk.variable} ${ibmPlexMono.variable} antialiased`}>
-        <Web3Provider>
-          <Navbar />
-          {children}
-        </Web3Provider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
